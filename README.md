@@ -7,6 +7,10 @@ M5Stack CoreS3にSpotifyの再生中ジャケット、再生状態、進捗を�
 
 個人・非商用利用を目的とした実験的なプロジェクトです。Spotifyとは
 提携・承認・後援関係にありません。SpotifyはSpotify ABの商標です。
+利用者は[Spotify Developer Terms](https://developer.spotify.com/terms)、
+[Developer Policy](https://developer.spotify.com/policy)、および
+[Design Guidelines](https://developer.spotify.com/documentation/design)を確認し、
+自分の利用について遵守する責任があります。
 
 ## 構成
 
@@ -44,6 +48,8 @@ Web APIからの状態取得は、既定で30秒に1回までです。その間�
 
 初回はmacOSからSpotifyを操作するAutomation権限を求められる場合があります。
 この構成ではSpotify Developer AppやOAuth認証は不要です。
+このバックエンドはSpotify Web APIを使わず、Spotifyデスクトップアプリの
+AppleScriptインターフェースを利用する非公式・実験的な実装です。
 
 ### Web APIを使う場合
 
@@ -112,8 +118,11 @@ pio run -e m5stack-cores3 -t upload --upload-port /dev/cu.usbmodemXXXX
 - 左側をタップ：前の曲
 - 中央をタップ：再生／一時停止
 - 右側をタップ：次の曲
+- 左上のSpotifyアイコンをタップ：現在の曲をSpotifyで開くQRコード
+- QRコード表示中に画面をタップ：再生画面へ戻る
 
-画面には正方形のアルバムジャケット、再生状態、プログレスバーを表示します。
+画面には正方形のアルバムジャケット、再生状態、プログレスバー、Spotifyの
+attributionを表示します。Spotifyアイコンは公式配布素材を24pxへ縮小したものです。
 
 ## 注意事項
 
@@ -121,3 +130,10 @@ pio run -e m5stack-cores3 -t upload --upload-port /dev/cu.usbmodemXXXX
 - 音声データの取得、保存、再配信は行いません。
 - SpotifyアプリやWeb APIの変更により動作しなくなる可能性があります。
 - Client Secret、OAuthトークン、`.env`をGitへコミットしないでください。
+- 本プロジェクトはSpotifyによる適合性の認定を受けたものではありません。
+
+## ライセンスとセキュリティ
+
+ソースコードは[MIT License](LICENSE)です。SpotifyのロゴはMIT Licenseの対象外で、
+詳細は[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)を参照してください。
+脆弱性の報告方法とセルフホスト時の注意は[SECURITY.md](SECURITY.md)に記載しています。

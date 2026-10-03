@@ -1,6 +1,7 @@
 {
   "name": "stack-chan-now-playing",
   "private": true,
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "server": "node --env-file-if-exists=.env server/src/index.ts",

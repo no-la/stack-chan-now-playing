@@ -5,6 +5,7 @@ export type PlayerState = {
   album: string;
   progressMs: number;
   durationMs: number;
+  spotifyUrl: string | null;
   artworkUrl: string | null;
   artworkWidth: number;
 };
@@ -29,11 +30,21 @@ export function toPlayerState(value: unknown, baseUrl: string): PlayerState {
     album: stringValue(album.name),
     progressMs: Math.round(nonNegativeNumber(body.progress_ms)),
     durationMs: Math.round(nonNegativeNumber(item.duration_ms)),
+    spotifyUrl: spotifyUrl(item),
     artworkUrl: artwork
       ? `${baseUrl}/api/artwork?url=${encodeURIComponent(artwork.url)}`
       : null,
     artworkWidth: artwork?.width ?? 0,
   };
+}
+
+function spotifyUrl(item: Record<string, unknown>): string | null {
+  const externalUrl = stringValue(asRecord(item.external_urls).spotify);
+  if (externalUrl.startsWith("https://open.spotify.com/")) return externalUrl;
+  const uri = stringValue(item.uri);
+  if (!uri.startsWith("spotify:")) return null;
+  const [kind, id] = uri.slice("spotify:".length).split(":");
+  return kind && id ? `https://open.spotify.com/${kind}/${id}` : null;
 }
 
 function selectArtwork(images: SpotifyImage[]): { url: string; width: number } | null {

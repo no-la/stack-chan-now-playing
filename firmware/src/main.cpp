@@ -4,11 +4,13 @@
 #include <HTTPClient.h>
 #include <M5Unified.h>
 #include <Preferences.h>
+#include <qrcode.h>
 #include <WebServer.h>
 #include <WiFi.h>
 #include <memory>
 
 #include "config.h"
+#include "spotify_icon.h"
 
 namespace {
 constexpr char kPreferencesNamespace[] = "stack-chan";
@@ -26,8 +28,10 @@ String serverUrl;
 String lastTrack;
 String lastArtworkUrl;
 String lastPlayerError;
+String lastSpotifyUrl;
 bool lastPlaying = false;
 bool hasPlayerState = false;
+bool linkViewVisible = false;
 uint32_t lastProgress = 0;
 uint32_t lastDuration = 0;
 uint16_t progressColor = TFT_GREEN;
@@ -248,6 +252,39 @@ void drawPauseIndicator() {
   playerFrame.fillRoundRect(165, 102, 9, 36, 3, kStatusColor);
 }
 
+void drawSpotifyAttribution() {
+  playerFrame.drawPng(kSpotifyIconPng, kSpotifyIconPng_len, 8, 8);
+}
+
+void drawSpotifyLink() {
+  if (lastSpotifyUrl.isEmpty()) return;
+  constexpr uint8_t version = 6;
+  uint8_t qrData[qrcode_getBufferSize(version)];
+  QRCode qrCode;
+  qrcode_initText(&qrCode, qrData, version, ECC_LOW, lastSpotifyUrl.c_str());
+
+  playerFrame.fillScreen(TFT_WHITE);
+  constexpr int scale = 4;
+  const int qrPixels = qrCode.size * scale;
+  const int originX = (320 - qrPixels) / 2;
+  const int originY = 31;
+  for (uint8_t y = 0; y < qrCode.size; ++y) {
+    for (uint8_t x = 0; x < qrCode.size; ++x) {
+      if (qrcode_getModule(&qrCode, x, y)) {
+        playerFrame.fillRect(originX + x * scale, originY + y * scale,
+                             scale, scale, TFT_BLACK);
+      }
+    }
+  }
+  playerFrame.setTextDatum(textdatum_t::top_center);
+  playerFrame.setTextColor(TFT_BLACK, TFT_WHITE);
+  playerFrame.setTextSize(2);
+  playerFrame.drawString("OPEN SPOTIFY", 160, 8);
+  playerFrame.setTextDatum(textdatum_t::top_left);
+  playerFrame.pushSprite(0, 0);
+  linkViewVisible = true;
+}
+
 void drawPlayerSurface() {
   playerFrame.fillScreen(TFT_BLACK);
   if (artworkData && artworkSizeBytes > 0) {
@@ -261,6 +298,7 @@ void drawPlayerSurface() {
     darkenArtwork();
     drawPauseIndicator();
   }
+  drawSpotifyAttribution();
   drawProgress();
   if (!lastPlayerError.isEmpty()) {
     playerFrame.fillRect(0, 0, 320, 18, 0x6000);
@@ -279,12 +317,14 @@ void drawPlayer(const JsonDocument& state) {
   const bool playing = state["playing"] | false;
   const uint32_t progress = state["progressMs"].as<uint32_t>();
   const uint32_t duration = state["durationMs"].as<uint32_t>();
+  const String spotifyUrl = state["spotifyUrl"] | "";
   const String playerError = state["error"]["code"] | "";
 
   const bool artworkChanged = track != lastTrack || artworkUrl != lastArtworkUrl ||
                               artworkWidth != artworkSourceWidth || !hasPlayerState;
   const bool playbackChanged = hasPlayerState && playing != lastPlaying;
   const bool errorChanged = playerError != lastPlayerError;
+  const bool linkChanged = spotifyUrl != lastSpotifyUrl;
   if (artworkChanged) {
     lastTrack = track;
     lastArtworkUrl = artworkUrl;
@@ -294,10 +334,11 @@ void drawPlayer(const JsonDocument& state) {
   lastPlaying = playing;
   lastProgress = progress;
   lastDuration = duration;
+  lastSpotifyUrl = spotifyUrl;
   lastPlayerError = playerError;
   hasPlayerState = true;
 
-  if (artworkChanged || playbackChanged || errorChanged) {
+  if (artworkChanged || playbackChanged || errorChanged || linkChanged) {
     drawPlayerSurface();
   } else {
     drawProgress();
@@ -323,6 +364,16 @@ void sendPlayerCommand(const char* command) {
 void handleTouch() {
   const auto touch = M5.Touch.getDetail();
   if (!touch.wasPressed()) return;
+  if (linkViewVisible) {
+    linkViewVisible = false;
+    drawPlayerSurface();
+    lastPollAt = 0;
+    return;
+  }
+  if (!lastSpotifyUrl.isEmpty() && touch.x >= 4 && touch.x < 36 && touch.y < 40) {
+    drawSpotifyLink();
+    return;
+  }
   if (touch.x < 80) {
     sendPlayerCommand("previous");
   } else if (touch.x < 240) {
@@ -397,6 +448,10 @@ void setup() {
 void loop() {
   M5.update();
   handleTouch();
+  if (linkViewVisible) {
+    delay(10);
+    return;
+  }
   const uint32_t now = millis();
   if (now - lastPollAt >= kPollIntervalMs) {
     lastPollAt = now;

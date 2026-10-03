@@ -9,7 +9,7 @@ set AppleScript's text item delimiters to ASCII character 31
 tell application "Spotify"
   if not running then return "NOT_RUNNING"
   set currentSpotifyTrack to current track
-  return {player state as text, player position as text, (name of currentSpotifyTrack) as text, (artist of currentSpotifyTrack) as text, (album of currentSpotifyTrack) as text, duration of currentSpotifyTrack as text, (artwork url of currentSpotifyTrack) as text} as text
+  return {player state as text, player position as text, (name of currentSpotifyTrack) as text, (artist of currentSpotifyTrack) as text, (album of currentSpotifyTrack) as text, duration of currentSpotifyTrack as text, (artwork url of currentSpotifyTrack) as text, (spotify url of currentSpotifyTrack) as text} as text
 end tell
 `;
 
@@ -22,6 +22,7 @@ type LocalState = {
   album?: unknown;
   duration?: unknown;
   artworkUrl?: unknown;
+  spotifyUrl?: unknown;
 };
 
 export class LocalSpotifyUnavailableError extends Error {
@@ -46,7 +47,7 @@ export async function localCurrentlyPlaying(): Promise<unknown> {
     throw new LocalSpotifyUnavailableError("Mac Spotify is not running");
   }
   const fields = stdout.trimEnd().split(fieldSeparator);
-  if (fields.length !== 7) {
+  if (fields.length !== 8) {
     throw new LocalSpotifyUnavailableError("Mac Spotify returned an invalid state");
   }
   const state: LocalState = {
@@ -58,6 +59,7 @@ export async function localCurrentlyPlaying(): Promise<unknown> {
     album: fields[4],
     duration: Number(fields[5]),
     artworkUrl: fields[6],
+    spotifyUrl: fields[7],
   };
   return toSpotifyPlayback(state);
 }
@@ -86,6 +88,7 @@ export function toSpotifyPlayback(state: LocalState): unknown {
     progress_ms: Math.max(0, numberValue(state.position) * 1000),
     item: {
       name: stringValue(state.name),
+      uri: stringValue(state.spotifyUrl),
       duration_ms: Math.max(0, numberValue(state.duration)),
       artists: [{ name: stringValue(state.artist) }],
       album: {

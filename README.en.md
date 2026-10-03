@@ -9,6 +9,11 @@ touch controls for previous, play/pause, and next.
 This is an experimental project intended for personal, non-commercial use. It
 is not affiliated with, endorsed by, or sponsored by Spotify. Spotify is a
 trademark of Spotify AB.
+Users are responsible for reviewing and complying with the
+[Spotify Developer Terms](https://developer.spotify.com/terms),
+[Developer Policy](https://developer.spotify.com/policy), and
+[Design Guidelines](https://developer.spotify.com/documentation/design) for
+their own use.
 
 ## Architecture
 
@@ -46,6 +51,8 @@ Requirement: Node.js 24 or newer.
 
 macOS may request Automation permission the first time the server accesses
 Spotify. A Spotify Developer App and OAuth are not required in this mode.
+This is an unofficial, experimental backend that uses the desktop app's
+AppleScript interface instead of the Spotify Web API.
 
 ### Web API setup
 
@@ -93,9 +100,29 @@ On first boot, connect a phone or Mac to `stack-chan-setup` with password
 and server URL. The settings are stored in ESP32 NVS and do not enter the
 source tree. Hold the CoreS3 screen during power-on to erase saved settings.
 
+## Controls
+
+- Tap the left side: previous track
+- Tap the center: play/pause
+- Tap the right side: next track
+- Tap the Spotify icon at the upper left: show a QR code that opens the current
+  track in Spotify
+- Tap anywhere while the QR code is visible: return to the player
+
+The player shows the square album artwork, playback state, progress, and
+Spotify attribution. The icon is the official asset resized to 24px.
+
 ## Notes
 
 - Intended for personal, non-commercial, self-hosted use.
 - It does not download, store, or redistribute Spotify audio.
 - Spotify app or Web API changes may break the integration.
 - Never commit the Client Secret, OAuth tokens, or `.env`.
+- This project has not been certified for compliance by Spotify.
+
+## License and security
+
+Source code is available under the [MIT License](LICENSE). The Spotify logo is
+excluded from that license; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+See [SECURITY.md](SECURITY.md) for vulnerability reporting and self-hosting
+security guidance.

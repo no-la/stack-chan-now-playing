@@ -9,6 +9,7 @@ test("maps Spotify playback into the firmware contract", () => {
     item: {
       name: "Digital Love",
       duration_ms: 301_800,
+      external_urls: { spotify: "https://open.spotify.com/track/example" },
       artists: [{ name: "Daft Punk" }],
       album: {
         name: "Discovery",
@@ -28,6 +29,7 @@ test("maps Spotify playback into the firmware contract", () => {
     album: "Discovery",
     progressMs: 42_000,
     durationMs: 301_800,
+    spotifyUrl: "https://open.spotify.com/track/example",
     artworkUrl: "http://stack-chan.local:8789/api/artwork?url=https%3A%2F%2Fi.scdn.co%2Flarge",
     artworkWidth: 640,
   });
@@ -51,6 +53,7 @@ test("uses safe defaults while nothing is playing", () => {
     album: "",
     progressMs: 0,
     durationMs: 0,
+    spotifyUrl: null,
     artworkUrl: null,
     artworkWidth: 0,
   });

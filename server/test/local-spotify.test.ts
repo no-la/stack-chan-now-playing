@@ -12,11 +12,13 @@ test("maps the Mac Spotify scripting response to the Web API shape", () => {
     album: "Discovery",
     duration: 301_800,
     artworkUrl: "https://i.scdn.co/image/example",
+    spotifyUrl: "spotify:track:example",
   }), {
     is_playing: true,
     progress_ms: 12_500,
     item: {
       name: "Digital Love",
+      uri: "spotify:track:example",
       duration_ms: 301_800,
       artists: [{ name: "Daft Punk" }],
       album: {
