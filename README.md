@@ -1,14 +1,14 @@
 # stack-chan-now-playing
 
-A self-hosted Spotify now-playing display and remote control for M5Stack
-CoreS3. It works cross-platform through the Spotify Web API and can optionally
-use the local Spotify app on macOS for faster updates without consuming API
-quota.
+[English](README.en.md)
 
-This is an independent project and is not affiliated with, endorsed by, or
-sponsored by Spotify. Spotify is a trademark of Spotify AB.
+M5Stack CoreS3にSpotifyの再生中ジャケット、再生状態、進捗を表示し、
+画面タップで再生操作できるセルフホスト型コンパニオンです。
 
-## Architecture
+個人・非商用利用を目的とした実験的なプロジェクトです。Spotifyとは
+提携・承認・後援関係にありません。SpotifyはSpotify ABの商標です。
+
+## 構成
 
 ```text
 Spotify Web API ---------------------> server/ <-> firmware/ (CoreS3)
@@ -16,39 +16,49 @@ Spotify Web API ---------------------> server/ <-> firmware/ (CoreS3)
 macOS Spotify app --AppleScript---------+
 ```
 
-Spotify credentials and refresh tokens stay on the self-hosted server. The
-firmware receives only a small JSON representation of the current player
-state. Web API state requests are limited to one every 30 seconds by default;
-responses between requests come from the server cache.
+CoreS3はLAN内のサーバーから、表示に必要な小さなJSONだけを取得します。
+Spotifyの認証情報とリフレッシュトークンはセルフホストしたサーバーに保存され、
+CoreS3には渡りません。
 
-## Server
+## Spotifyバックエンド
 
-Requirements: Node.js 24 or newer.
+`.env`の`SPOTIFY_BACKEND`で選択します。
 
-1. Create an app in the Spotify Developer Dashboard. Each self-hosted
-   installation should use its own app credentials.
-2. Add `http://127.0.0.1:8789/auth/callback` as a redirect URI.
-3. Copy `.env.example` to `.env` and enter the client ID and secret.
-4. Choose a backend with `SPOTIFY_BACKEND`:
+- `auto`: macOSアプリを優先し、失敗時にWeb APIへフォールバック
+- `macos`: macOS版SpotifyアプリをAppleScriptで直接読み取り・操作
+- `web-api`: Spotify Web APIのみを使用。macOS以外でも利用可能
 
-   - `web-api`: cross-platform Spotify Web API only
-   - `macos`: local macOS Spotify app only
-   - `auto`: try the macOS app first, then fall back to the Web API
+Web APIからの状態取得は、既定で30秒に1回までです。その間はサーバーの
+キャッシュを返します。再生・一時停止・前曲・次曲の操作は即時送信します。
 
-5. Start the server:
+## サーバー
 
-   ```sh
-   npm run server
-   ```
+必要なもの：Node.js 24以降
 
-6. Open <http://127.0.0.1:8789/auth/login> once and authorize Spotify. This is
-   not required when using the `macos` backend.
+### macOSバックエンドだけを使う場合
 
-On macOS, install and open the Spotify desktop app before using the `macos` or
-`auto` backend. macOS may ask for Automation access the first time the server
-reads or controls it.
+1. macOS版Spotifyアプリをインストールして起動します。
+2. `.env.example`を`.env`へコピーします。
+3. `SPOTIFY_BACKEND=macos`に変更します。
+4. `npm run server`でサーバーを起動します。
 
-Useful endpoints:
+初回はmacOSからSpotifyを操作するAutomation権限を求められる場合があります。
+この構成ではSpotify Developer AppやOAuth認証は不要です。
+
+### Web APIを使う場合
+
+1. Spotify Developer Dashboardで自分専用のアプリを作成します。
+2. Redirect URIに`http://127.0.0.1:8789/auth/callback`を登録します。
+3. `.env.example`を`.env`へコピーし、Client IDとClient Secretを設定します。
+4. `SPOTIFY_BACKEND=web-api`または`auto`を選びます。
+5. `npm run server`でサーバーを起動します。
+6. <http://127.0.0.1:8789/auth/login>を一度開いてSpotifyを認証します。
+
+セルフホストする人ごとに、自分のSpotify Developer Appを作成する前提です。
+共通のClient IDやClient Secretは配布しません。Web API経由の再生操作には
+Spotify Premiumが必要です。
+
+### HTTP API
 
 ```text
 GET  /health
@@ -58,35 +68,56 @@ POST /api/player/next
 POST /api/player/previous
 ```
 
-Run the tests with `npm test`.
+テストと構文チェック：
 
-To disconnect the Web API account and delete its locally stored tokens, stop
-the server and run:
+```sh
+npm test
+npm run check
+```
+
+### Spotifyとの接続解除
+
+サーバーを停止してから次を実行すると、ローカルに保存したOAuthトークンを
+削除できます。
 
 ```sh
 npm run spotify:disconnect
 ```
 
-See [PRIVACY.md](PRIVACY.md) for the self-hosted data-handling details.
+データの扱いは[PRIVACY.md](PRIVACY.md)を参照してください。
 
-## Firmware
+## CoreS3ファームウェア
 
-1. Copy `firmware/include/config.example.h` to `firmware/include/config.h` and
-   set the default server LAN address.
-2. Connect the CoreS3 and identify its port with `ls /dev/cu.usbmodem*`.
-3. Build and upload:
+1. `firmware/include/config.example.h`を`firmware/include/config.h`へコピーし、
+   サーバーのLAN内URLを設定します。
+2. CoreS3を接続し、シリアルポートを確認します。
+3. PlatformIOでビルドして書き込みます。
 
-   ```sh
-   cd firmware
-   pio run -e m5stack-cores3
-   pio run -e m5stack-cores3 -t upload --upload-port /dev/cu.usbmodemXXXX
-   ```
+```sh
+cd firmware
+pio run -e m5stack-cores3
+pio run -e m5stack-cores3 -t upload --upload-port /dev/cu.usbmodemXXXX
+```
 
-On first boot, connect a phone or Mac to `stack-chan-setup` using password
-`stackchan`, then open <http://192.168.4.1>. Enter the home Wi-Fi credentials
-and server URL. They are saved in the ESP32's NVS and do not enter the source
-tree. If connection fails, setup mode starts again. To erase saved settings,
-hold the CoreS3 screen while powering it on.
+初回起動時は、スマートフォンまたはMacからWi-Fiアクセスポイント
+`stack-chan-setup`へ接続します。パスワードは`stackchan`です。
+<http://192.168.4.1>を開き、自宅Wi-FiとサーバーURLを入力してください。
 
-The firmware displays contained album artwork, playback state and a progress
-bar. Tap the left, center or right area for previous, play/pause or next.
+設定はESP32のNVSへ保存され、ソースコードには入りません。接続できない場合は
+再びセットアップモードになります。保存済み設定を消すには、CoreS3の画面を
+押したまま電源を入れます。
+
+## 操作
+
+- 左側をタップ：前の曲
+- 中央をタップ：再生／一時停止
+- 右側をタップ：次の曲
+
+画面には正方形のアルバムジャケット、再生状態、プログレスバーを表示します。
+
+## 注意事項
+
+- 個人・非商用のセルフホスト利用を想定しています。
+- 音声データの取得、保存、再配信は行いません。
+- SpotifyアプリやWeb APIの変更により動作しなくなる可能性があります。
+- Client Secret、OAuthトークン、`.env`をGitへコミットしないでください。
