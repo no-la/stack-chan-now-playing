@@ -5,7 +5,7 @@ import { toPlayerState } from "../src/player.ts";
 test("maps Spotify playback into the firmware contract", () => {
   const result = toPlayerState({
     is_playing: true,
-    progress_ms: 42_000,
+    progress_ms: 42_000.4,
     item: {
       name: "Digital Love",
       duration_ms: 301_800,
@@ -31,6 +31,16 @@ test("maps Spotify playback into the firmware contract", () => {
     artworkUrl: "http://stack-chan.local:8789/api/artwork?url=https%3A%2F%2Fi.scdn.co%2Flarge",
     artworkWidth: 640,
   });
+});
+
+test("rounds fractional millisecond values for embedded clients", () => {
+  const result = toPlayerState({
+    progress_ms: 4_406.000137329001,
+    item: { duration_ms: 289_615.6 },
+  }, "http://stack-chan.local:8789");
+
+  assert.equal(result.progressMs, 4_406);
+  assert.equal(result.durationMs, 289_616);
 });
 
 test("uses safe defaults while nothing is playing", () => {

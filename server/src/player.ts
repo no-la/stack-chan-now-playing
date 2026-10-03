@@ -27,8 +27,8 @@ export function toPlayerState(value: unknown, baseUrl: string): PlayerState {
       .filter(Boolean)
       .join(", "),
     album: stringValue(album.name),
-    progressMs: nonNegativeNumber(body.progress_ms),
-    durationMs: nonNegativeNumber(item.duration_ms),
+    progressMs: Math.round(nonNegativeNumber(body.progress_ms)),
+    durationMs: Math.round(nonNegativeNumber(item.duration_ms)),
     artworkUrl: artwork
       ? `${baseUrl}/api/artwork?url=${encodeURIComponent(artwork.url)}`
       : null,

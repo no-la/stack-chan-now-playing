@@ -277,8 +277,8 @@ void drawPlayer(const JsonDocument& state) {
   const String artworkUrl = state["artworkUrl"] | "";
   const uint16_t artworkWidth = state["artworkWidth"] | 0;
   const bool playing = state["playing"] | false;
-  const uint32_t progress = state["progressMs"] | 0;
-  const uint32_t duration = state["durationMs"] | 0;
+  const uint32_t progress = state["progressMs"].as<uint32_t>();
+  const uint32_t duration = state["durationMs"].as<uint32_t>();
   const String playerError = state["error"]["code"] | "";
 
   const bool artworkChanged = track != lastTrack || artworkUrl != lastArtworkUrl ||
