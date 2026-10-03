@@ -1,0 +1,8 @@
+.DS_Store
+.env
+server/data/
+server/coverage/
+firmware/.pio/
+firmware/.vscode/
+firmware/include/config.h
+
