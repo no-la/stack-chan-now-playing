@@ -1,9 +1,10 @@
 {
-  "name": "stack-chan-spotify",
+  "name": "stack-chan-now-playing",
   "private": true,
   "type": "module",
   "scripts": {
     "server": "node --env-file-if-exists=.env server/src/index.ts",
+    "spotify:disconnect": "node server/src/disconnect.ts",
     "test": "node --test server/test/*.test.ts",
     "check": "node --check server/src/*.ts"
   },

@@ -1,9 +1,12 @@
-# stack-chan-spotify
+# stack-chan-now-playing
 
 A self-hosted Spotify now-playing display and remote control for M5Stack
 CoreS3. It works cross-platform through the Spotify Web API and can optionally
 use the local Spotify app on macOS for faster updates without consuming API
 quota.
+
+This is an independent project and is not affiliated with, endorsed by, or
+sponsored by Spotify. Spotify is a trademark of Spotify AB.
 
 ## Architecture
 
@@ -56,6 +59,15 @@ POST /api/player/previous
 ```
 
 Run the tests with `npm test`.
+
+To disconnect the Web API account and delete its locally stored tokens, stop
+the server and run:
+
+```sh
+npm run spotify:disconnect
+```
+
+See [PRIVACY.md](PRIVACY.md) for the self-hosted data-handling details.
 
 ## Firmware
 
